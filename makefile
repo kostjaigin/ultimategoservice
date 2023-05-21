@@ -85,12 +85,24 @@ dev-down-local: kind delete cluster --name $(KIND_CLUSTER)
 
 dev-down: dev-down-local
 
+# we can use restart after changing the image #
+dev-restart:
+	kubectl rollout restart deployment $(APP) --namespace=$(NAMESPACE)
+
+# load prepared docker image from docker into kind cluster #
 dev-load:
 	kind load docker-image $(SERVICE_IMAGE) --name $(KIND_CLUSTER)
 
+# use kustomize to build .yaml k8s configuration and apply it on cluster #
 dev-apply:
 	kustomize build zarf/k8s/dev/sales | kubectl apply -f -
 	kubectl wait pods --namespace=$(NAMESPACE) --selector app=$(APP) --for=condition=Ready
+
+# utilizes restart - use when image changes (due to code change) #
+dev-update: all dev-load dev-restart
+
+# utilizes apply - use when k8s configuration changes (due to .yaml change) #
+dev-update-apply: all dev-load dev-apply
 
 # ------------------------------------------------------------------------------
 
@@ -99,18 +111,14 @@ dev-status:
 	kubectl get svc -o wide
 	kubectl get pods -o wide --watch --all-namespaces
 
-# we can use restart after changing the image #
-dev-restart:
-	kubectl rollout restart deployment $(APP) --namespace=$(NAMESPACE)
-
 dev-logs:
 	kubectl logs --namespace=$(NAMESPACE) -l app=$(APP) --all-containers=true -f --tail=100
 
-# utilizes restart - use when image changes (due to code change) #
-dev-update: all dev-load dev-restart
+dev-describe-deployment:
+	kubectl describe deployment --namespace=$(NAMESPACE) $(APP)
 
-# utilizes apply - use when k8s configuration changes (due to .yaml change) #
-dev-update-apply: all dev-load dev-apply
+dev-describe-sales:
+	kubectl describe pod --namespace=$(NAMESPACE) -l app=$(APP)
 
 # ==============================================================================
 run-local:
