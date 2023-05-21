@@ -57,3 +57,21 @@ go mod init github.com/kostjaigin/ultimategoservice
 ```
 
 and execute `go mod tidy` in order to add module requirements and sums. I will follow Bill's example and vendor my dependencies (= keep a local copy of them) `go mod vendor`. Those two commands together build my first make flow - `make tidy`.
+
+| Group                     | Commands                  |
+|---------------------------|---------------------------|
+| Environment Setup         | `dev-docker`, `dev-gotooling`, `dev-brew-common` |
+| Building                  | `all`, `service` |
+| Local Kubernetes Management | `dev-up-local`, `dev-up`, `dev-down-local`, `dev-down`, `dev-load`, `dev-apply` |
+| Monitoring and Inspection | `dev-status`, `dev-logs`             |
+| Local Execution           | `run-local`              |
+| Dependency Management     | `tidy`                   |
+
+Execution order from zero: `make tidy`, `make dev-up-local`, ``
+
+### Software Design Learnings
+
+- We always switch between two hats. We are engineers (maintanance, usability) and programmers (algorithms)
+- We do things that are easy to understand
+- Do not add complexity until abs. necessary
+- Rob Pike's approach - we don't design in interfaces and abstractions, we discover them in process
