@@ -67,7 +67,27 @@ and execute `go mod tidy` in order to add module requirements and sums. I will f
 | Local Execution           | `run-local`              |
 | Dependency Management     | `tidy`                   |
 
-Execution order from zero: `make tidy`, `make dev-up-local`, ``
+
+We can utilize the label from kustomize configuration to query the app carrying pod logs:
+`kubectl logs --namespace=$(NAMESPACE) -l app=$(APP) ... where APP = sales`
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sales
+  namespace: sales-system
+
+spec:
+  selector:
+    matchLabels:
+      app: sales <---
+
+  template:
+    metadata:
+      labels:
+        app: sales <---
+```
 
 ### Software Design Learnings
 

@@ -99,11 +99,17 @@ dev-status:
 	kubectl get svc -o wide
 	kubectl get pods -o wide --watch --all-namespaces
 
+# we can use restart after changing the image #
+dev-restart:
+	kubectl rollout restart deployment $(APP) --namespace=$(NAMESPACE)
+
 dev-logs:
 	kubectl logs --namespace=$(NAMESPACE) -l app=$(APP) --all-containers=true -f --tail=100
 
+# utilizes restart - use when image changes (due to code change) #
 dev-update: all dev-load dev-restart
 
+# utilizes apply - use when k8s configuration changes (due to .yaml change) #
 dev-update-apply: all dev-load dev-apply
 
 # ==============================================================================
