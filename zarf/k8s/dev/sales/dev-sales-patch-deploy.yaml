@@ -91,10 +91,10 @@ spec:
       containers:
       - name: sales-api
         resources:
-          requests:
-            cpu: "1500m" # I need access to 1.5 cores on the node.
+          requests:      # resources required to run the POD on a node
+            cpu: "1500m" # I need access to 1.5 cores on the node. If there is no fitting node, results in error.
             memory: 500Mi
-          limits:
+          limits:        # how many shares of available resources containers get
             cpu: "1500m" # Execute instructions 150ms/200ms on my 1.5 cores.
             memory: 500Mi
 
