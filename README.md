@@ -95,3 +95,10 @@ spec:
 - We do things that are easy to understand
 - Do not add complexity until abs. necessary
 - Rob Pike's approach - we don't design in interfaces and abstractions, we discover them in process
+
+### Go Specific Design Learnings
+
+- We only read configuration in main.go. Nowhere else.
+- Go always tries to use the whole available processing power. This can be changed by setting GOMAXPROCS system variable (we are setting it to correspond to set k8s CPU limits) 
+- We should always be able to type `--help` and `--version` in our services and be able to ovveride configuration with system variables. Their [conf](https://pkg.go.dev/github.com/ardanlabs/conf/) package helps us with this.
+- Services should ALWAYS work on default settings.
