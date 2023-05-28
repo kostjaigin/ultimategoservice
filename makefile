@@ -71,7 +71,7 @@ service:
 # ==============================================================================
 # Running from within k8s/kind
 
-dev-up-local:
+dev-up:
 	kind create cluster \
 		--image $(KIND) \
 		--name $(KIND_CLUSTER) \
@@ -79,12 +79,8 @@ dev-up-local:
 
 	kubectl wait --timeout=120s --namespace=local-path-storage --for=condition=Available deployment/local-path-provisioner
 
-dev-up: dev-up-local
-
-dev-down-local: 
+dev-down: 
 	kind delete cluster --name $(KIND_CLUSTER)
-
-dev-down: dev-down-local
 
 # we can use restart after changing the image #
 dev-restart:
