@@ -81,7 +81,8 @@ dev-up-local:
 
 dev-up: dev-up-local
 
-dev-down-local: kind delete cluster --name $(KIND_CLUSTER)
+dev-down-local: 
+	kind delete cluster --name $(KIND_CLUSTER)
 
 dev-down: dev-down-local
 
