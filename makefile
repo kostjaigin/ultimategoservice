@@ -131,7 +131,10 @@ tidy:
 metrics-view-local:
 	expvarmon -ports="localhost:4000" -vars="build,requests,goroutines,errors,panics,mem:memstats.Alloc"
 
-test-endpoint:
+test-debug-endpoint:
 	curl -il localhost:4000/debug/vars
+
+test-endpoint:
+	curl -il localhost:3000/test
 
 # in order to use expvarmon we need to bind it to PATH in our terminal session .. 

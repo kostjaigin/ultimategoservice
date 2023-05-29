@@ -149,3 +149,23 @@ but we also don't care, cause it doesn't do any writes and can't corrupt the dat
 Using channels in API's is a bad practice - how do we define who is providing/deciding on garanty? 
 
 - Bill himself doesn't know what those initial timeout values are supposed to be! We just set same values that are not too ridicously short or long. 
+
+Up until this commit (7626f08500bd6a0e7e53d02789dba6570432f346) we provided a basic structure for our API service using:
+
+```go
+	api := http.Server{
+		Addr:         cfg.Web.APIHost,
+		Handler:      nil,
+		ReadTimeout:  cfg.Web.ReadTimeout,
+		WriteTimeout: cfg.Web.WriteTimeout,
+		IdleTimeout:  cfg.Web.IdleTimeout,
+		ErrorLog:     zap.NewStdLog(log.Desugar()),
+	}
+```
+where `nil` value sets http.DefaultServeMux to Handler. We can take a MUX implementation of our choice instead of standard one and replace the `nil` value there, since Handler is just an interface:
+
+```go
+type Handler interface {
+	ServeHTTP(ResponseWriter, *Request)
+}
+```
