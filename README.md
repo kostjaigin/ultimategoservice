@@ -94,6 +94,7 @@ spec:
 - We do things that are easy to understand
 - Do not add complexity until abs. necessary
 - Rob Pike's approach - we don't design in interfaces and abstractions, we discover them in process
+- When designing an API do not return abstract, decoupled types. Return concrete types. It's callers decision to decouple returned value. 
 
 ### Go Specific Design Learnings
 
@@ -150,22 +151,20 @@ Using channels in API's is a bad practice - how do we define who is providing/de
 
 - Bill himself doesn't know what those initial timeout values are supposed to be! We just set same values that are not too ridicously short or long. 
 
-Up until this commit (7626f08500bd6a0e7e53d02789dba6570432f346) we provided a basic structure for our API service using:
-
+With current implementation of http.HandlerFunction we run into a problem. Our implemented Test function under testgrp is basically the outerlayer of the call that doesn't return anything - it is not allowed to, because http.HandlerFunc type is define strictly:
 ```go
-	api := http.Server{
-		Addr:         cfg.Web.APIHost,
-		Handler:      nil,
-		ReadTimeout:  cfg.Web.ReadTimeout,
-		WriteTimeout: cfg.Web.WriteTimeout,
-		IdleTimeout:  cfg.Web.IdleTimeout,
-		ErrorLog:     zap.NewStdLog(log.Desugar()),
-	}
+type HandlerFunc func(ResponseWriter, *Request)
 ```
-where `nil` value sets http.DefaultServeMux to Handler. We can take a MUX implementation of our choice instead of standard one and replace the `nil` value there, since Handler is just an interface:
+We can't return anything. But we said that Handler is supposed to do the following steps:
 
-```go
-type Handler interface {
-	ServeHTTP(ResponseWriter, *Request)
-}
-```
+  - Validate the data
+	- Call into the business layer
+	- Return errors
+	- Handle OK response
+
+how are we going to return errors and responses if we can't return anything?...
+
+We want to create an onion of the inside out of function: `(Router(Logger(ErrorHandler(PanicHandler(func T)))))`
+
+
+

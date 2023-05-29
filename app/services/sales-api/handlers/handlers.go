@@ -1,11 +1,11 @@
 package handlers
 
 import (
-	"encoding/json"
 	"net/http"
 	"os"
 
 	"github.com/dimfeld/httptreemux/v5"
+	"github.com/kostjaigin/ultimategoservice/app/services/sales-api/handlers/v1/testgrp"
 	"go.uber.org/zap"
 )
 
@@ -15,22 +15,14 @@ type APIMuxConfig struct {
 	Log      *zap.SugaredLogger
 }
 
-func APIMux(cfg APIMuxConfig) http.Handler {
+// APIMux constructs a http.Handler with all applicatoin routes defined.
+func APIMux(cfg APIMuxConfig) *httptreemux.ContextMux {
 	// httptreemux context mux uses same fct signature as http package for its handlers //
 	mux := httptreemux.NewContextMux()
 
-	h := func(w http.ResponseWriter, r *http.Request) {
-		status := struct {
-			Status string
-		}{
-			Status: "OK",
-		}
-
-		json.NewEncoder(w).Encode(status)
-	}
 	// bounding a route to mux //
 	// when request comes in to /test, we handle it with h //
-	mux.Handle(http.MethodGet, "/test", h)
+	mux.Handle(http.MethodGet, "/test", testgrp.Test)
 
 	return mux
 }
