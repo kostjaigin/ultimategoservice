@@ -62,11 +62,10 @@ and execute `go mod tidy` in order to add module requirements and sums. I will f
 |---------------------------|---------------------------|
 | Environment Setup         | `dev-docker`, `dev-gotooling`, `dev-brew-common` |
 | Building                  | `all`, `service` |
-| Local Kubernetes Management | `dev-up-local`, `dev-up`, `dev-down-local`, `dev-down`, `dev-load`, `dev-apply` |
+| Local Kubernetes Management | `dev-up`, `dev-down`, `dev-load`, `dev-apply` |
 | Monitoring and Inspection | `dev-status`, `dev-logs`             |
 | Local Execution           | `run-local`              |
 | Dependency Management     | `tidy`                   |
-
 
 We can utilize the label from kustomize configuration to query the app carrying pod logs:
 `kubectl logs --namespace=$(NAMESPACE) -l app=$(APP) ... where APP = sales`
@@ -102,3 +101,51 @@ spec:
 - Go always tries to use the whole available processing power. This can be changed by setting GOMAXPROCS system variable (we are setting it to correspond to set k8s CPU limits) 
 - We should always be able to type `--help` and `--version` in our services and be able to ovveride configuration with system variables. Their [conf](https://pkg.go.dev/github.com/ardanlabs/conf/) package helps us with this.
 - Services should ALWAYS work on default settings.
+
+Here comes a part about errors as signals (and as values)
+```
+(G_m) = main go routine
+  |
+  |---log
+  |---conf
+  |
+  |        {👤} user
+  |        ☁️☁️☁️
+  |         |
+  |-------(G_d) = debug go routine
+  |      / | | \
+  |     ⚪ 🟡 🔴 🟣 G_d serves spawns different go routines for each request
+  |
+  |        {👤} user
+  |        ☁️☁️☁️
+  |         |
+  |-------(G_a) = API service routine
+  |      / | | \
+  |     ⚪ ⚫ 🟠 🔘 G_a serves spawns different go routines for each request
+  |
+  | 🔄 all while G_m is waiting for a signal to shutdown
+  |
+ ---
+  -
+```
+Some of G_a spawned goroutines might execute write operations. If we signal shutdown to the G_m and do not let G_a spawned go routines finish what they were doing, we get data corruption. Parent routine should not terminate before children: if some of the spawning goroutines should be terminated, "orphan" goroutines should be adapted by the main routine. 
+
+Debug go routine is a typicall "orphan" - we don't track it's state:
+
+```go
+log.Infow("startup", "status", "debug v1 router started", "host", cfg.Web.DebugHost)
+
+go func() {
+  if err := http.ListenAndServe(cfg.Web.DebugHost, debug.StandardLibraryMux()); err != nil {
+    log.Errorw("shutdown", "status", "debug v1 router closed", "host", cfg.Web.DebugHost, "ERROR", err)
+  }
+}()
+```
+
+but we also don't care, cause it doesn't do any writes and can't corrupt the data.
+
+- channels in go serve one purpose and that's --> horizontal signaling. With or without data. If the word 'signal' doesn't make sense for your application case you should not use channel. There is guaranteed signalling and non-guarantied signalling. A.k.a unbuffered & buffered channels. You get your garanties (unbuffered channels) in cost of latency - if the receiver is not there, the sender has to wait.
+
+Using channels in API's is a bad practice - how do we define who is providing/deciding on garanty? 
+
+- Bill himself doesn't know what those initial timeout values are supposed to be! We just set same values that are not too ridicously short or long. 

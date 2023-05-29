@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -15,6 +16,12 @@ import (
 	"github.com/kostjaigin/ultimategoservice/foundation/logger"
 	"go.uber.org/zap"
 )
+
+/*
+	TODO:
+	Need to figure out timeouts for http service
+	Add Category field and type to product
+*/
 
 var build = "develop"
 
@@ -88,14 +95,48 @@ func run(log *zap.SugaredLogger) error {
 	}()
 
 	// -------------------------------------------------------------------------
+	// Start API Service
+
+	log.Infow("startup", "status", "initializing V1 API support")
 
 	shutdown := make(chan os.Signal, 1)
 	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)
 
-	sig := <-shutdown
+	api := http.Server{
+		Addr:         cfg.Web.APIHost,
+		Handler:      nil,
+		ReadTimeout:  cfg.Web.ReadTimeout,
+		WriteTimeout: cfg.Web.WriteTimeout,
+		IdleTimeout:  cfg.Web.IdleTimeout,
+		ErrorLog:     zap.NewStdLog(log.Desugar()),
+	}
 
-	log.Infow("shutdown", "status", "shutdown started", "signal", sig)
-	defer log.Infow("shutdown", "status", "shutdown complete", "signal", sig)
+	// using buffer of 1 I allow goroutine (sender) to terminate and not wait for the receiver //
+	serverErrors := make(chan error, 1)
+
+	go func() {
+		log.Infow("startup", "status", "api router started", "host", api.Addr)
+		serverErrors <- api.ListenAndServe()
+	}()
+
+	// -------------------------------------------------------------------------
+	// Shutdown (select is a blocking call, to block forever do select{})
+
+	select {
+	case err := <-serverErrors:
+		return fmt.Errorf("server error: %w", err)
+	case sig := <-shutdown:
+		log.Infow("shutdown", "status", "shutdown started", "signal", sig)
+		defer log.Infow("shutdown", "status", "shutdown complete", "signal", sig)
+
+		ctx, cancel := context.WithTimeout(context.Background(), cfg.Web.ShutdownTimeout)
+		defer cancel()
+
+		if err := api.Shutdown(ctx); err != nil {
+			api.Close()
+			return fmt.Errorf("could not stop server gracefully: %w", err)
+		}
+	}
 
 	return nil
 }
