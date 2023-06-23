@@ -102,6 +102,7 @@ spec:
 - Go always tries to use the whole available processing power. This can be changed by setting GOMAXPROCS system variable (we are setting it to correspond to set k8s CPU limits) 
 - We should always be able to type `--help` and `--version` in our services and be able to ovveride configuration with system variables. Their [conf](https://pkg.go.dev/github.com/ardanlabs/conf/) package helps us with this.
 - Services should ALWAYS work on default settings.
+- pointer/value semantics: go is balanced there. General rule: type represents data --> value semantics, type represents an API --> pointer semantics. 
 
 Here comes a part about errors as signals (and as values)
 ```
@@ -165,6 +166,4 @@ We can't return anything. But we said that Handler is supposed to do the followi
 how are we going to return errors and responses if we can't return anything?...
 
 We want to create an onion of the inside out of function: `(Router(Logger(ErrorHandler(PanicHandler(func T)))))`
-
-
 
