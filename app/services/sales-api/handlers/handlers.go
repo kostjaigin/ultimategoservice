@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/kostjaigin/ultimategoservice/app/services/sales-api/handlers/v1/testgrp"
+	"github.com/kostjaigin/ultimategoservice/business/web/v1/mid"
 	"github.com/kostjaigin/ultimategoservice/foundation/web"
 	"go.uber.org/zap"
 )
@@ -18,7 +19,7 @@ type APIMuxConfig struct {
 // APIMux constructs a http.Handler with all applicatoin routes defined.
 func APIMux(cfg APIMuxConfig) *web.App {
 	// httptreemux context mux uses same fct signature as http package for its handlers //
-	app := web.NewApp(cfg.Shutdown)
+	app := web.NewApp(cfg.Shutdown, mid.Logger(cfg.Log))
 
 	// bounding a route to mux //
 	// when request comes in to /test, we handle it with h //
