@@ -19,7 +19,9 @@ type APIMuxConfig struct {
 // APIMux constructs a http.Handler with all applicatoin routes defined.
 func APIMux(cfg APIMuxConfig) *web.App {
 	// httptreemux context mux uses same fct signature as http package for its handlers //
-	app := web.NewApp(cfg.Shutdown, mid.Logger(cfg.Log))
+	// we take test, wrap error around it, then wrap logger around it //
+	// from right to left //
+	app := web.NewApp(cfg.Shutdown, mid.Logger(cfg.Log), mid.Errors(cfg.Log))
 
 	// bounding a route to mux //
 	// when request comes in to /test, we handle it with h //

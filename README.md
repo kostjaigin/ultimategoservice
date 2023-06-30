@@ -103,6 +103,31 @@ spec:
 - We should always be able to type `--help` and `--version` in our services and be able to ovveride configuration with system variables. Their [conf](https://pkg.go.dev/github.com/ardanlabs/conf/) package helps us with this.
 - Services should ALWAYS work on default settings.
 - pointer/value semantics: go is balanced there. General rule: type represents data --> value semantics, type represents an API --> pointer semantics. 
+- Rob Pike about errors in golang: "errors in go are values". It is quite hard to understand this concept straight forward. You can easily be like: "okay, Rob. Thanks.". But actually it is really interesting - your error can be anything. When you are checking if err != nil, we are comparing some err interface type is present in given object. 
+
+           __  error pipe
+ Appl [F] [X3]
+ ------   [  ]
+ Busi [F] [X2]
+ ------   [  ]
+ Foun [F] [X1]
+ ------   [  ]
+ Stan [F] [  ]
+ ------   [X0]
+
+ Somethind happens in standard library.
+
+What should happen when we handle an error? 
+
+1. Log it
+2. Decide if app should terminate - recover or not
+3. Because you are **handling** the error, you do not propagate it further up the call stack. You can propagate a different error, another error. But that error has been handled.
+
+Now that we propagated standard library error X to foundational level in the call stack, we need to handle it. We stumble at the first step - logging. We can't log an error in foundational level. We have a strict hierarchy. So we wrap it around and pass further on. The higher in the call stack we handle the error the lower the chance of recovering. 
+
+It is really interesting how on day 3 he hightlights how developers tend to put too much information into their errors. That's how those get displayed on airport screens, gas station displayes and so on. Containing local IP addresses, senitive data and so on. We should keep error content minimal, required to understand. And tweak it later on. **Trusted error** - construct own error types that would contain only necessary information not to leak anything.
+
+Another type of errors Bill is introducing are **shutdown errors**. If service has integrity issues - it should not be running.
 
 Here comes a part about errors as signals (and as values)
 ```
@@ -167,3 +192,10 @@ how are we going to return errors and responses if we can't return anything?...
 
 We want to create an onion of the inside out of function: `(Router(Logger(ErrorHandler(PanicHandler(func T)))))`
 
+^ That's what we do with our middleware and web App struct:
+
+> The key difference is the introduction of a new abstraction layer - the web.App struct, which is a custom wrapper around the httptreemux.ContextMux router. This new structure allows for custom behavior to be added before and after each handler execution. 
+
+> The handler signature was also changed. It now includes a context and returns an error, allowing for context cancellation handling and centralized error handling. 
+
+> These changes give you more control over the behavior of your HTTP handlers and can provide a better structure for handling common functionality across all your HTTP endpoints.
