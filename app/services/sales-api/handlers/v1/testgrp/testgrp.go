@@ -20,8 +20,6 @@ func Test(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 
 	// Validate the data
 	// Call into the business layer
-	// Return errors
-	// With hereby I declare to buy for my little princess squirell something sweeet tommorow cause she now currently has her period cravings
 
 	status := struct {
 		Status string
