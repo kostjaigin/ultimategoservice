@@ -21,7 +21,7 @@ func APIMux(cfg APIMuxConfig) *web.App {
 	// httptreemux context mux uses same fct signature as http package for its handlers //
 	// we take test, wrap error around it, then wrap logger around it //
 	// from right to left // (with panics coming as close as possible to the handler call)
-	app := web.NewApp(cfg.Shutdown, mid.Logger(cfg.Log), mid.Errors(cfg.Log), mid.Panics())
+	app := web.NewApp(cfg.Shutdown, mid.Logger(cfg.Log), mid.Errors(cfg.Log), mid.Metrics(), mid.Panics())
 
 	// bounding a route to mux //
 	// when request comes in to /test, we handle it with h //
