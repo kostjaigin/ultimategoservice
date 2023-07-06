@@ -199,3 +199,5 @@ We want to create an onion of the inside out of function: `(Router(Logger(ErrorH
 > The handler signature was also changed. It now includes a context and returns an error, allowing for context cancellation handling and centralized error handling. 
 
 > These changes give you more control over the behavior of your HTTP handlers and can provide a better structure for handling common functionality across all your HTTP endpoints.
+
+In order to use expvarmon (as well as other go installed packages and programms), we need to bind GOPATH to our PATH variable. For this set it directly in your .bash_profile or .zshrc (or other conf file depending on what terminal you are using): `export PATH=$PATH:$(go env GOPATH)/bin`. I am then using expvarmon to monitor metrics and values directly in my terminal using `make metrics-view-local` command.
