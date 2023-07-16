@@ -44,7 +44,7 @@ func (a *App) SignalShutdown() {
 
 // Handle sets a handler function for a given HTTP method and path pair
 // to the application server mux.
-// Note that this way we override the default implementation of Handle function preesent in Context.Mux
+// Note that this way we override the default implementation of Handle function present in Context.Mux
 // Note that we include Route specific middleware [e.g., auth for some pathes]
 func (a *App) Handle(method string, path string, handler Handler, mw ...Middleware) {
 	handler = wrapMiddleware(mw, handler)
